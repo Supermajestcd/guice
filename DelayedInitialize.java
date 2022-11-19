@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Google Inc.
+ * Copyright (C) 2011 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,5 +14,16 @@
  * limitations under the License.
  */
 
-/** Used for matching things. Primarily used to pick out methods to which to apply interceptors. */
-package com.google.inject.matcher;
+package com.google.inject.internal;
+
+/**
+ * Something that needs some delayed initialization, typically a binding or internal factory that
+ * needs to be created; put into the bindings map and then initialized later.
+ *
+ * @author sameb@google.com (Sam Berlin)
+ */
+interface DelayedInitialize {
+
+  /** Initializes this binding, throwing any errors if necessary. */
+  void initialize(InjectorImpl injector, Errors errors) throws ErrorsException;
+}

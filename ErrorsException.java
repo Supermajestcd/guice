@@ -16,32 +16,24 @@
 
 package com.google.inject.internal;
 
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
-import com.google.inject.BindingAnnotation;
-import java.lang.annotation.Retention;
-
 /**
- * An internal binding annotation applied to each element in a multibinding. All elements are
- * assigned a globally-unique id to allow different modules to contribute multibindings
- * independently.
+ * Indicates that a result could not be returned while preparing or resolving a binding. The caller
+ * should {@link Errors#merge(Errors) merge} the errors from this exception with their existing
+ * errors.
  *
  * @author jessewilson@google.com (Jesse Wilson)
  */
-@Retention(RUNTIME)
-@BindingAnnotation
-@interface Element {
+public class ErrorsException extends Exception {
+  // NOTE: this is used by Gin which is abandoned.  So changing this API will prevent Gin users from
+  // upgrading Guice version.
 
-  enum Type {
-    MAPBINDER,
-    MULTIBINDER;
+  private final Errors errors;
+
+  public ErrorsException(Errors errors) {
+    this.errors = errors;
   }
 
-  String setName();
-
-  int uniqueId();
-
-  Type type();
-
-  String keyType();
+  public Errors getErrors() {
+    return errors;
+  }
 }

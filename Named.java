@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008 Google Inc.
+ * Copyright (C) 2006 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,34 +14,23 @@
  * limitations under the License.
  */
 
-package com.google.inject.internal;
+package com.google.inject.name;
 
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 import com.google.inject.BindingAnnotation;
+import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
 /**
- * An internal binding annotation applied to each element in a multibinding. All elements are
- * assigned a globally-unique id to allow different modules to contribute multibindings
- * independently.
+ * Annotates named things.
  *
- * @author jessewilson@google.com (Jesse Wilson)
+ * @author crazybob@google.com (Bob Lee)
  */
 @Retention(RUNTIME)
+@Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.METHOD})
 @BindingAnnotation
-@interface Element {
-
-  enum Type {
-    MAPBINDER,
-    MULTIBINDER;
-  }
-
-  String setName();
-
-  int uniqueId();
-
-  Type type();
-
-  String keyType();
+public @interface Named {
+  String value();
 }

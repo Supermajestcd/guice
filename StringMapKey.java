@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008 Google Inc.
+ * Copyright (C) 2015 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,34 +14,24 @@
  * limitations under the License.
  */
 
-package com.google.inject.internal;
+package com.google.inject.multibindings;
 
+import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-import com.google.inject.BindingAnnotation;
+import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
 /**
- * An internal binding annotation applied to each element in a multibinding. All elements are
- * assigned a globally-unique id to allow different modules to contribute multibindings
- * independently.
+ * Allows {@literal @}{@link ProvidesIntoMap} to specify a string map key.
  *
- * @author jessewilson@google.com (Jesse Wilson)
+ * @since 4.0
  */
+@MapKey(unwrapValue = true)
+@Documented
+@Target(METHOD)
 @Retention(RUNTIME)
-@BindingAnnotation
-@interface Element {
-
-  enum Type {
-    MAPBINDER,
-    MULTIBINDER;
-  }
-
-  String setName();
-
-  int uniqueId();
-
-  Type type();
-
-  String keyType();
+public @interface StringMapKey {
+  String value();
 }
