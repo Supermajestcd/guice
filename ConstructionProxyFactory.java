@@ -14,5 +14,15 @@
  * limitations under the License.
  */
 
-/** Used for matching things. Primarily used to pick out methods to which to apply interceptors. */
-package com.google.inject.matcher;
+package com.google.inject.internal;
+
+/**
+ * Creates {@link ConstructionProxy} instances.
+ *
+ * @author crazybob@google.com (Bob Lee)
+ */
+interface ConstructionProxyFactory<T> {
+
+  /** Gets a construction proxy for the given constructor. */
+  ConstructionProxy<T> create() throws ErrorsException;
+}
