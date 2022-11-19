@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Google Inc.
+ * Copyright (C) 2009 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,5 +14,22 @@
  * limitations under the License.
  */
 
-/** <i>Guice</i> (sounds like "juice") */
 package com.google.inject.internal;
+
+import com.google.inject.Key;
+import com.google.inject.MembersInjector;
+import com.google.inject.Provider;
+import com.google.inject.TypeLiteral;
+
+/**
+ * Accessors for providers and members injectors. The returned values will not be functional until
+ * the injector has been created.
+ *
+ * @author jessewilson@google.com (Jesse Wilson)
+ */
+interface Lookups {
+
+  <T> Provider<T> getProvider(Key<T> key);
+
+  <T> MembersInjector<T> getMembersInjector(TypeLiteral<T> type);
+}
