@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Google Inc.
+ * Copyright (C) 2008 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,5 +14,13 @@
  * limitations under the License.
  */
 
-/** <i>Guice</i> (sounds like "juice") */
 package com.google.inject.internal;
+
+import com.google.inject.spi.InjectionPoint;
+
+/** Injects a field or method of a given object. */
+interface SingleMemberInjector {
+  void inject(InternalContext context, Object o) throws InternalProvisionException;
+
+  InjectionPoint getInjectionPoint();
+}

@@ -14,5 +14,25 @@
  * limitations under the License.
  */
 
-/** <i>Guice</i> (sounds like "juice") */
 package com.google.inject.internal;
+
+import com.google.inject.spi.Dependency;
+
+/**
+ * Creates objects which will be injected.
+ *
+ * @author crazybob@google.com (Bob Lee)
+ */
+interface InternalFactory<T> {
+
+  /**
+   * Creates an object to be injected.
+   *
+   * @param context of this injection
+   * @param linked true if getting as a result of a linked binding
+   * @throws com.google.inject.internal.InternalProvisionException if a value cannot be provided
+   * @return instance that was created
+   */
+  T get(InternalContext context, Dependency<?> dependency, boolean linked)
+      throws InternalProvisionException;
+}
