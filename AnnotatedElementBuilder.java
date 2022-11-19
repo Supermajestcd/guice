@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Google Inc.
+ * Copyright (C) 2008 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,5 +14,21 @@
  * limitations under the License.
  */
 
-/** Interfaces which make up {@link com.google.inject.Binder}'s expression language. */
 package com.google.inject.binder;
+
+import java.lang.annotation.Annotation;
+
+/**
+ * See the EDSL examples at {@link com.google.inject.Binder}.
+ *
+ * @author jessewilson@google.com (Jesse Wilson)
+ * @since 2.0
+ */
+public interface AnnotatedElementBuilder {
+
+  /** See the EDSL examples at {@link com.google.inject.Binder}. */
+  void annotatedWith(Class<? extends Annotation> annotationType);
+
+  /** See the EDSL examples at {@link com.google.inject.Binder}. */
+  void annotatedWith(Annotation annotation);
+}
