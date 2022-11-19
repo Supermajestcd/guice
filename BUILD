@@ -2,134 +2,155 @@
 # Author: sameb@google.com (Sam Berlin)
 
 load("@rules_java//java:defs.bzl", "java_library")
-load("//:mvn.bzl", "gen_maven_artifact")
-load(
-    "//:build_defs.bzl",
-    "JAVAC_OPTS",
-    "POM_VERSION",
-)
+load("//:test_defs.bzl", "guice_test_suites")
 
-package(
-    default_visibility = ["//:src"],
-)
+package(default_testonly = 1)
 
-CALLER_FINDER_COMMON_SRCS = [
-    "internal/util/CallerFinder.java",
-    "internal/util/NewThrowableFinder.java",
+TEST_SUPPORT_SRCS = [
+    "Asserts.java",
+    "internal/WeakKeySetUtils.java",
 ]
 
-ANNOTATION_SRCS = [
-    "BindingAnnotation.java",
-    "Exposed.java",
-    "Inject.java",
-    "Provides.java",
-    "ScopeAnnotation.java",
-    "Singleton.java",
+ADD_OPENS_SRCS = [
+    "ImplicitBindingJdkPackagePrivateTest.java",
 ]
 
-PROVIDED_BY_SRCS = [
-    "ProvidedBy.java",
-]
-
-IMPLEMENTED_BY_SRCS = [
-    "ImplementedBy.java",
-]
-
+# Files that are shared by extensions also.
+# Typically this would go in a java/../testing package,
+# but we need to work with the open-source code structure,
+# so it is here.
 java_library(
-    name = "caller_finder_common",
-    srcs = CALLER_FINDER_COMMON_SRCS,
-    javacopts = JAVAC_OPTS,
-)
-
-java_library(
-    name = "implemented_by",
-    srcs = IMPLEMENTED_BY_SRCS,
-    javacopts = JAVAC_OPTS,
-)
-
-java_library(
-    name = "provided_by",
-    srcs = PROVIDED_BY_SRCS,
-    javacopts = JAVAC_OPTS,
+    name = "testsupport",
+    srcs = TEST_SUPPORT_SRCS,
+    javacopts = ["-Xep:BetaApi:OFF"],
+    visibility = [
+        "//:src",
+    ],
     deps = [
-        "//third_party/java/jsr330_inject",
+        "//core/src/com/google/inject",
+        "//third_party/java/guava/base",
+        "//third_party/java/guava/collect",
+        "//third_party/java/guava/testing",
+        "//third_party/java/junit",
+        "//third_party/java/truth",
     ],
 )
 
-# TODO(lukes,user): It'd be nice if this wasn't one big rule.
-# Unfortunately, splitting it apart would not be easy. We looked into
-# it and the main issues appear to be:
-#   - Utility classes like internal/MoreTypes (choke point dependencies)
-#   - Cyclical dependencies between Binder and spi/Element
+# All the actual XTest classes & friends.
 java_library(
-    name = "inject",
+    name = "tests",
     srcs = glob(
-        ["**/*.java"],
-        exclude = IMPLEMENTED_BY_SRCS + PROVIDED_BY_SRCS + ANNOTATION_SRCS + CALLER_FINDER_COMMON_SRCS,
+        ["**/*.java"],  # glob ignores subfolder that has its own BUILD files
+        exclude = TEST_SUPPORT_SRCS + ADD_OPENS_SRCS + [
+            "AllTests.java",
+        ],
     ),
-    javacopts = JAVAC_OPTS,
+    javacopts = ["-Xep:BetaApi:OFF"],
     plugins = [
     ],
-    tags = ["maven_coordinates=com.google.inject:guice:" + POM_VERSION],
-    exports = [
-        ":annotations",
-        ":implemented_by",
-        ":provided_by",
-        # TODO(user): caller_finder_common shouldn't be exported, but validation requires
-        # it be exported right now.
-        ":caller_finder_common",
-    ],
     deps = [
-        # Warning: Be very careful adding new dependencies,
-        # These all have to mirrored in the open-source
-        # build (and jarjar'd up).
-        ":annotations",
-        ":caller_finder_common",
-        ":implemented_by",
-        ":provided_by",
-        "//third_party/java/guava/annotations",
-        "//third_party/java/guava/base",
-        "//third_party/java/guava/cache",
-        "//third_party/java/guava/collect",
-        "//third_party/java/guava/primitives",
+        ":testsupport",
+        "//core/src/com/google/inject",
         "//third_party/java/aopalliance",
         "//third_party/java/asm",
-        "//third_party/java/error_prone:annotations",
-        "//third_party/java/jsr305_annotations",
+        "//third_party/java/guava/base",
+        "//third_party/java/guava/collect",
+        "//third_party/java/guava/testing",
+        "//third_party/java/guava/util/concurrent",
         "//third_party/java/jsr330_inject",
+        "//third_party/java/junit",
+        "//third_party/java/truth",
     ],
 )
 
 java_library(
-    name = "annotations",
-    srcs = ANNOTATION_SRCS,
-    javacopts = JAVAC_OPTS,
-    plugins = [
+    name = "add_opens_tests",
+    srcs = ADD_OPENS_SRCS,
+    javacopts = ["-Xep:BetaApi:OFF"],
+    visibility = [
+        "//:src",
     ],
     deps = [
-        "//third_party/java/error_prone:annotations",
-        "//third_party/java/jsr330_inject",
+        "//core/src/com/google/inject",
+        "//third_party/java/guava/base",
+        "//third_party/java/junit",
     ],
 )
 
-filegroup(
-    name = "javadoc-srcs",
-    srcs = glob(
-        ["**/*.java"],
-        exclude = ["internal/**/*.java"],
-    ),
+# This target is unused, but exists so that we can more easily
+# ensure the opensource build maintains compiling code.
+java_library(
+    name = "AllTests",
+    srcs = ["AllTests.java"],
+    deps = [
+        ":add_opens_tests",
+        ":tests",
+        "//core/test/com/googlecode/guice:tests",
+        "//third_party/java/junit",
+    ],
 )
 
-gen_maven_artifact(
-    name = "core",
-    artifact_id = "guice",
-    artifact_name = "Google Guice - Core Library",
-    artifact_target = ":inject",
-    artifact_target_libs = [
-        ":annotations",
-        ":implemented_by",
-        ":caller_finder_common",
-        ":provided_by",
+guice_test_suites(
+    name = "gen_tests",
+    jvm_flags = [
+        # those 2 options are required for some tests that checks stack traces
+        "-XX:+UnlockDiagnosticVMOptions",
+        "-XX:+ShowHiddenFrames",
     ],
-    javadoc_srcs = [":javadoc-srcs"],
+    sizes = [
+        "small",
+        "medium",
+    ],
+    deps = [
+        ":add_opens_tests",
+        ":tests",
+    ],
 )
+
+[guice_test_suites(
+    name = "gen_tests_stack_trace_%s" % include_stack_trace_option,
+    args = [
+        "--guice_include_stack_traces=%s" % include_stack_trace_option,
+    ],
+    jvm_flags = [
+        # those 2 options are required for some tests that checks stack traces
+        "-XX:+UnlockDiagnosticVMOptions",
+        "-XX:+ShowHiddenFrames",
+    ],
+    sizes = [
+        "small",
+        "medium",
+    ],
+    suffix = "_stack_trace_%s" % include_stack_trace_option,
+    deps = [
+        ":add_opens_tests",
+        ":tests",
+    ],
+) for include_stack_trace_option in [
+    "OFF",
+]]
+
+[guice_test_suites(
+    name = "gen_tests_class_loading_%s" % custom_class_loading_option,
+    args = [
+        "--guice_custom_class_loading=%s" % custom_class_loading_option,
+    ],
+    jvm_flags = [
+        # those 2 options are required for some tests that checks stack traces
+        "-XX:+UnlockDiagnosticVMOptions",
+        "-XX:+ShowHiddenFrames",
+    ],
+    sizes = [
+        "small",
+        "medium",
+    ],
+    suffix = "_custom_class_loading_%s" % custom_class_loading_option,
+    deps = [
+        ":add_opens_tests",
+        ":tests",
+    ],
+) for custom_class_loading_option in [
+    "OFF",
+    "ANONYMOUS",
+    "CHILD",
+]]
