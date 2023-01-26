@@ -1,85 +1,156 @@
-load("@google_bazel_common//tools/javadoc:javadoc.bzl", "javadoc_library")
+# Copyright 2011 Google Inc.  All rights reserved.
+# Author: sameb@google.com (Sam Berlin)
 
-package(default_visibility = ["//visibility:public"])
+load("@rules_java//java:defs.bzl", "java_library")
+load("//:test_defs.bzl", "guice_test_suites")
 
-package_group(
-    name = "src",
-    packages = ["//..."],
-)
+package(default_testonly = 1)
 
-exports_files([
-    "pom-template.xml",
-])
+TEST_SUPPORT_SRCS = [
+    "Asserts.java",
+    "internal/WeakKeySetUtils.java",
+]
 
-javadoc_library(
-    name = "javadoc",
-    testonly = 1,  # some dependencies are testonly,
-    srcs = [
-        "//core/src/com/google/inject:javadoc-srcs",
-        "//extensions/assistedinject/src/com/google/inject/assistedinject:javadoc-srcs",
-        "//extensions/dagger-adapter/src/com/google/inject/daggeradapter:javadoc-srcs",
-        "//extensions/grapher/src/com/google/inject/grapher:javadoc-srcs",
-        "//extensions/jmx/src/com/google/inject/tools/jmx:javadoc-srcs",
-        "//extensions/jndi/src/com/google/inject/jndi:javadoc-srcs",
-        "//extensions/persist/src/com/google/inject/persist:javadoc-srcs",
-        "//extensions/servlet/src/com/google/inject/servlet:javadoc-srcs",
-        "//extensions/spring/src/com/google/inject/spring:javadoc-srcs",
-        "//extensions/struts2/src/com/google/inject/struts2:javadoc-srcs",
-        "//extensions/testlib/src/com/google/inject/testing/fieldbinder:javadoc-srcs",
-        "//extensions/testlib/src/com/google/inject/testing/throwingproviders:javadoc-srcs",
-        "//extensions/throwingproviders/src/com/google/inject/throwingproviders:javadoc-srcs",
+ADD_OPENS_SRCS = [
+    "ImplicitBindingJdkPackagePrivateTest.java",
+]
+
+# Files that are shared by extensions also.
+# Typically this would go in a java/../testing package,
+# but we need to work with the open-source code structure,
+# so it is here.
+java_library(
+    name = "testsupport",
+    srcs = TEST_SUPPORT_SRCS,
+    javacopts = ["-Xep:BetaApi:OFF"],
+    visibility = [
+        "//:src",
     ],
-    doctitle = "Guice Dependency Injection API",
-    external_javadoc_links = [
-        "https://docs.oracle.com/javase/8/docs/api/",
-        "https://guava.dev/releases/snapshot-jre/api/docs/",
-        "https://google.github.io/truth/api/latest/",
-        "http://errorprone.info/api/latest/",
-        "https://tomcat.apache.org/tomcat-5.5-doc/servletapi/",
-        "http://aopalliance.sourceforge.net/doc/",
-    ],
-    groups = {
-        "Guice Core": [
-            "com.google.inject",
-            "com.google.inject.util",
-            "com.google.inject.spi",
-            "com.google.inject.name",
-            "com.google.inject.matcher",
-            "com.google.inject.binder",
-            "com.google.inject.multibindings",
-        ],
-        "AssistedInject Extension": ["com.google.inject.assistedinject"],
-        "Dagger Adapter": ["com.google.inject.daggeradapter"],
-        "Grapher Extension": [
-            "com.google.inject.grapher",
-            "com.google.inject.grapher.*",
-        ],
-        "JNDI Extension": ["com.google.inject.jndi"],
-        "JMX Extension": ["com.google.inject.tools.jmx"],
-        "Persist Extension": [
-            "com.google.inject.persist",
-            "com.google.inject.persist.*",
-        ],
-        "Servlet Extension": ["com.google.inject.servlet"],
-        "Spring Extension": ["com.google.inject.spring"],
-        "Struts2 Extension": ["com.google.inject.struts2"],
-        "Test Libraries Extension": ["com.google.inject.testing.*"],
-        "ThrowingProviders Extension": ["com.google.inject.throwingproviders"],
-    },
-    tags = ["manual"],  # Only do this when explicitly requested, not on test //...
     deps = [
         "//core/src/com/google/inject",
-        "//extensions/assistedinject/src/com/google/inject/assistedinject",
-        "//extensions/dagger-adapter/src/com/google/inject/daggeradapter",
-        "//extensions/grapher/src/com/google/inject/grapher",
-        "//extensions/jmx/src/com/google/inject/tools/jmx",
-        "//extensions/jndi/src/com/google/inject/jndi",
-        "//extensions/persist/src/com/google/inject/persist",
-        "//extensions/servlet/src/com/google/inject/servlet",
-        "//extensions/spring/src/com/google/inject/spring",
-        "//extensions/struts2/src/com/google/inject/struts2",
-        "//extensions/testlib/src/com/google/inject/testing/fieldbinder",
-        "//extensions/testlib/src/com/google/inject/testing/throwingproviders",
-        "//extensions/throwingproviders/src/com/google/inject/throwingproviders",
+        "//third_party/java/guava/base",
+        "//third_party/java/guava/collect",
+        "//third_party/java/guava/testing",
+        "//third_party/java/junit",
+        "//third_party/java/truth",
     ],
 )
+
+# All the actual XTest classes & friends.
+java_library(
+    name = "tests",
+    srcs = glob(
+        ["**/*.java"],  # glob ignores subfolder that has its own BUILD files
+        exclude = TEST_SUPPORT_SRCS + ADD_OPENS_SRCS + [
+            "AllTests.java",
+        ],
+    ),
+    javacopts = ["-Xep:BetaApi:OFF"],
+    plugins = [
+    ],
+    deps = [
+        ":testsupport",
+        "//core/src/com/google/inject",
+        "//third_party/java/aopalliance",
+        "//third_party/java/asm",
+        "//third_party/java/guava/base",
+        "//third_party/java/guava/collect",
+        "//third_party/java/guava/testing",
+        "//third_party/java/guava/util/concurrent",
+        "//third_party/java/jsr330_inject",
+        "//third_party/java/junit",
+        "//third_party/java/truth",
+    ],
+)
+
+java_library(
+    name = "add_opens_tests",
+    srcs = ADD_OPENS_SRCS,
+    javacopts = ["-Xep:BetaApi:OFF"],
+    visibility = [
+        "//:src",
+    ],
+    deps = [
+        "//core/src/com/google/inject",
+        "//third_party/java/guava/base",
+        "//third_party/java/junit",
+    ],
+)
+
+# This target is unused, but exists so that we can more easily
+# ensure the opensource build maintains compiling code.
+java_library(
+    name = "AllTests",
+    srcs = ["AllTests.java"],
+    deps = [
+        ":add_opens_tests",
+        ":tests",
+        "//core/test/com/googlecode/guice:tests",
+        "//third_party/java/junit",
+    ],
+)
+
+guice_test_suites(
+    name = "gen_tests",
+    jvm_flags = [
+        # those 2 options are required for some tests that checks stack traces
+        "-XX:+UnlockDiagnosticVMOptions",
+        "-XX:+ShowHiddenFrames",
+    ],
+    sizes = [
+        "small",
+        "medium",
+    ],
+    deps = [
+        ":add_opens_tests",
+        ":tests",
+    ],
+)
+
+[guice_test_suites(
+    name = "gen_tests_stack_trace_%s" % include_stack_trace_option,
+    args = [
+        "--guice_include_stack_traces=%s" % include_stack_trace_option,
+    ],
+    jvm_flags = [
+        # those 2 options are required for some tests that checks stack traces
+        "-XX:+UnlockDiagnosticVMOptions",
+        "-XX:+ShowHiddenFrames",
+    ],
+    sizes = [
+        "small",
+        "medium",
+    ],
+    suffix = "_stack_trace_%s" % include_stack_trace_option,
+    deps = [
+        ":add_opens_tests",
+        ":tests",
+    ],
+) for include_stack_trace_option in [
+    "OFF",
+]]
+
+[guice_test_suites(
+    name = "gen_tests_class_loading_%s" % custom_class_loading_option,
+    args = [
+        "--guice_custom_class_loading=%s" % custom_class_loading_option,
+    ],
+    jvm_flags = [
+        # those 2 options are required for some tests that checks stack traces
+        "-XX:+UnlockDiagnosticVMOptions",
+        "-XX:+ShowHiddenFrames",
+    ],
+    sizes = [
+        "small",
+        "medium",
+    ],
+    suffix = "_custom_class_loading_%s" % custom_class_loading_option,
+    deps = [
+        ":add_opens_tests",
+        ":tests",
+    ],
+) for custom_class_loading_option in [
+    "OFF",
+    "ANONYMOUS",
+    "CHILD",
+]]

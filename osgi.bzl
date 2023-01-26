@@ -36,7 +36,7 @@ osgi_jar = rule(
         "symbolic_name": attr.string(),
         "_osgi_wrapper_exe": attr.label(
             executable = True,
-            cfg = "exec",
+            cfg = "host",
             allow_files = True,
             default = Label("//tools:osgi_wrapper"),
         ),
